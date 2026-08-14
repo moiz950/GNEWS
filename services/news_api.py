@@ -1,4 +1,5 @@
 from datetime import datetime
+from time import sleep
 from urllib.parse import urlparse
 
 import requests
@@ -10,37 +11,63 @@ class NewsAPIService:
 
     CATEGORIES = {"general", "world", "nation", "business", "technology", "entertainment", "sports", "science", "health"}
 
+    # Statuses worth retrying (transient server errors / rate limits).
+    RETRYABLE = {429, 500, 502, 503, 504}
+
     @staticmethod
-    def _request(endpoint, params=None):
+    def _request(endpoint, params=None, attempts=3):
         api_key = current_app.config.get("GNEWS_API_KEY")
         if not api_key:
             return [], "GNews API key is missing. Add GNEWS_API_KEY to your .env file."
 
         request_params = {"token": api_key, "lang": "en", "max": 10, **(params or {})}
-        try:
-            response = requests.get(
-                f"{current_app.config['GNEWS_BASE_URL']}/{endpoint}",
-                params=request_params,
-                timeout=12,
-            )
-            response.raise_for_status()
-            payload = response.json()
-            return [NewsAPIService.normalize(article) for article in payload.get("articles", [])], None
-        except requests.exceptions.HTTPError as error:
-            status = error.response.status_code if error.response else 500
-            if status == 401:
-                message = "The news service API key is invalid."
-            elif status == 403:
-                message = "The news service request limit has been reached."
-            elif status == 429:
-                message = "Too many news requests. Please try again shortly."
-            else:
-                message = "The news service is temporarily unavailable."
-            current_app.logger.warning("GNews HTTP error %s", status)
-            return [], message
-        except (requests.RequestException, ValueError) as error:
-            current_app.logger.warning("GNews request failed: %s", error)
-            return [], "Sorry, we couldn't load the latest news. Please try again later."
+        last_message = "Sorry, we couldn't load the latest news. Please try again later."
+
+        for attempt in range(1, attempts + 1):
+            try:
+                response = requests.get(
+                    f"{current_app.config['GNEWS_BASE_URL']}/{endpoint}",
+                    params=request_params,
+                    timeout=12,
+                )
+                if response.status_code in NewsAPIService.RETRYABLE and attempt < attempts:
+                    # Back off briefly before retrying (0.5s, 1s, ...).
+                    sleep(0.5 * attempt)
+                    continue
+                response.raise_for_status()
+                payload = response.json()
+                return [NewsAPIService.normalize(article) for article in payload.get("articles", [])], None
+            except requests.exceptions.HTTPError as error:
+                status = error.response.status_code if error.response else 500
+                # Log the real response body so the cause is visible in the server logs.
+                body = ""
+                if error.response is not None:
+                    try:
+                        body = error.response.text[:500]
+                    except Exception:  # pragma: no cover - defensive
+                        body = ""
+                current_app.logger.warning("GNews HTTP error %s: %s", status, body)
+                if status == 401:
+                    last_message = "The news service API key is invalid."
+                elif status == 403:
+                    last_message = "The news service request limit has been reached."
+                elif status == 429:
+                    last_message = "Too many news requests. Please try again shortly."
+                else:
+                    last_message = "The news service is temporarily unavailable."
+                if status in NewsAPIService.RETRYABLE and attempt < attempts:
+                    sleep(0.5 * attempt)
+                    continue
+                return [], last_message
+            except (requests.RequestException, ValueError) as error:
+                current_app.logger.warning("GNews request failed (attempt %s): %s", attempt, error)
+                last_message = "Sorry, we couldn't load the latest news. Please try again later."
+                if attempt < attempts:
+                    sleep(0.5 * attempt)
+                    continue
+                return [], last_message
+
+        return [], last_message
 
     @staticmethod
     def normalize(article):
