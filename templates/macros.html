@@ -1,0 +1,30 @@
+{% macro article_url(article) -%}
+{{ url_for('article', title=article.title, description=article.description, content=article.content|default(article.description), image=article.image, url=article.url, source=article.source, published_at=article.published_at, display_date=article.display_date, author=article.author|default(article.source)) }}
+{%- endmacro %}
+
+{% macro card(article, category='News') %}
+<article class="news-card reveal">
+  <a class="card-image-wrap" href="{{ article_url(article) }}">
+    <img class="card-image" src="{{ article.image or url_for('static', filename='images/news-placeholder.svg') }}" alt="{{ article.title }}" loading="lazy" onerror="this.src='{{ url_for('static', filename='images/news-placeholder.svg') }}'">
+  </a>
+  <div class="card-content">
+    <span class="badge">{{ category|title }}</span>
+    <h3><a href="{{ article_url(article) }}">{{ article.title }}</a></h3>
+    <p>{{ article.description|truncate(130) }}</p>
+    <div class="meta"><span>{{ article.source }}</span><span>{{ article.display_date or article.published_at }}</span></div>
+    <div class="card-actions">
+      <a class="text-link" href="{{ article_url(article) }}">Read more <i class="fa-solid fa-arrow-right"></i></a>
+      {% if current_user.is_authenticated %}
+      <form action="{{ url_for('add_bookmark') }}" method="post">
+        <input type="hidden" name="title" value="{{ article.title }}"><input type="hidden" name="description" value="{{ article.description }}">
+        <input type="hidden" name="image_url" value="{{ article.image }}"><input type="hidden" name="article_url" value="{{ article.url }}">
+        <input type="hidden" name="source" value="{{ article.source }}"><input type="hidden" name="published_at" value="{{ article.published_at }}">
+        <button class="icon-button" title="Save article" aria-label="Save {{ article.title }}"><i class="fa-regular fa-bookmark"></i></button>
+      </form>
+      {% else %}<a class="icon-button" title="Login to save" href="{{ url_for('login', next=request.full_path) }}"><i class="fa-regular fa-bookmark"></i></a>{% endif %}
+    </div>
+  </div>
+</article>
+{% endmacro %}
+
+{% macro empty(message='No stories were found.') %}<div class="empty-state"><i class="fa-regular fa-newspaper"></i><h3>{{ message }}</h3><p>Try again later or explore another category.</p></div>{% endmacro %}

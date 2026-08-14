@@ -1,0 +1,14 @@
+{% extends 'base.html' %}{% from 'macros.html' import card, empty, article_url with context %}
+{% block title %}Latest News{% endblock %}
+{% block content %}
+<section class="container hero-section">
+{% if featured %}<article class="hero">
+  <img src="{{ featured.image or url_for('static', filename='images/news-placeholder.svg') }}" alt="{{ featured.title }}" onerror="this.src='{{ url_for('static', filename='images/news-placeholder.svg') }}'">
+  <div class="hero-overlay"><span class="badge">Top story</span><h1>{{ featured.title }}</h1><p>{{ featured.description|truncate(190) }}</p><div class="meta"><span>{{ featured.source }}</span><span>{{ featured.display_date }}</span></div><a class="button button-primary" href="{{ article_url(featured) }}">Read the story <i class="fa-solid fa-arrow-right"></i></a></div>
+</article>{% else %}<div class="hero hero-empty"><div><h1>Your window to the world</h1><p>{{ api_error or 'Fresh reporting and essential stories will appear here.' }}</p></div></div>{% endif %}
+</section>
+<section class="container section"><div class="section-heading"><div><span class="eyebrow">Stay informed</span><h2>Latest News</h2></div></div>
+{% if api_error %}<div class="notice"><i class="fa-solid fa-circle-exclamation"></i>{{ api_error }}</div>{% endif %}
+<div class="news-grid">{% for item in articles[1:] %}{{ card(item, 'Latest') }}{% endfor %}</div>{% if not articles %}{{ empty() }}{% endif %}</section>
+{% for name, items in sections.items() %}<section class="container section category-section"><div class="section-heading"><div><span class="eyebrow">In focus</span><h2>{{ name|title }}</h2></div><a class="text-link" href="{{ url_for('category', category=name) }}">View all <i class="fa-solid fa-arrow-right"></i></a></div><div class="news-grid">{% for item in items %}{{ card(item, name) }}{% endfor %}</div>{% if not items %}{{ empty('No ' ~ name ~ ' stories available.') }}{% endif %}</section>{% endfor %}
+{% endblock %}
