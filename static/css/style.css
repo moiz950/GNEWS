@@ -76,11 +76,32 @@ button {
     z-index: 99
 }
 
+/* Scroll progress bar */
+.scroll-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0;
+    background: linear-gradient(90deg, var(--red), #ff7a45);
+    z-index: 60;
+    transition: width .12s ease-out
+}
+
+/* Sticky glassmorphic header */
 .site-header {
-    background: var(--surface);
+    background: rgba(255, 255, 255, .82);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    backdrop-filter: saturate(180%) blur(14px);
     border-bottom: 1px solid var(--line);
-    position: relative;
-    z-index: 5
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 6px 24px rgba(20, 38, 83, .05)
+}
+
+[data-theme=dark] .site-header {
+    background: rgba(18, 30, 60, .82)
 }
 
 .topbar {
@@ -122,7 +143,8 @@ button {
 .icon-button:hover {
     background: var(--navy);
     color: #fff;
-    border-color: var(--navy)
+    border-color: var(--navy);
+    transform: translateY(-2px)
 }
 
 .main-nav {
@@ -290,7 +312,12 @@ button {
     width: 100%;
     height: 475px;
     object-fit: cover;
-    opacity: .68
+    opacity: .68;
+    transition: transform 8s ease
+}
+
+.hero:hover>img {
+    transform: scale(1.06)
 }
 
 .hero:after {
@@ -382,19 +409,26 @@ button {
 }
 
 .news-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow)
+    transform: translateY(-6px);
+    box-shadow: var(--shadow);
+    border-color: transparent
 }
 
 .card-image-wrap {
-    display: block
+    display: block;
+    overflow: hidden
 }
 
 .card-image {
     width: 100%;
     height: 190px;
     object-fit: cover;
-    display: block
+    display: block;
+    transition: transform .5s ease
+}
+
+.news-card:hover .card-image {
+    transform: scale(1.08)
 }
 
 .card-content {
@@ -453,12 +487,17 @@ button {
 .text-link {
     color: var(--red);
     font-size: 13px;
-    font-weight: 700
+    font-weight: 700;
+    transition: gap .2s
 }
 
 .text-link i {
     font-size: 10px;
     margin-left: 4px
+}
+
+.text-link:hover {
+    text-decoration: underline
 }
 
 .card-actions .icon-button {
@@ -512,19 +551,25 @@ button {
 }
 
 .button-primary {
-    background: var(--red);
-    color: #fff
+    background: linear-gradient(135deg, var(--red), #ff6a3d);
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(227, 38, 54, .28)
 }
 
 .button-primary:hover {
-    background: var(--red-dark);
-    transform: translateY(-1px)
+    background: linear-gradient(135deg, var(--red-dark), var(--red));
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px rgba(227, 38, 54, .36)
 }
 
 .button-muted {
     background: var(--soft);
     color: var(--ink);
     border: 1px solid var(--line)
+}
+
+.button-muted:hover {
+    background: #eef1f7
 }
 
 .button-block {
@@ -697,7 +742,8 @@ button {
     padding: 12px 13px;
     background: var(--surface);
     color: var(--ink);
-    outline: 0
+    outline: 0;
+    transition: border-color .2s, box-shadow .2s
 }
 
 .form-card input:focus,
@@ -822,7 +868,13 @@ button {
     background: var(--surface);
     padding: 30px;
     border-radius: var(--radius);
-    border: 1px solid var(--line)
+    border: 1px solid var(--line);
+    transition: .25s
+}
+
+.prose-grid article:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow)
 }
 
 .prose-grid i {
@@ -898,7 +950,13 @@ button {
     padding: 24px;
     border-radius: 14px;
     display: grid;
-    gap: 4px
+    gap: 4px;
+    transition: .25s
+}
+
+.admin-stats>div:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow)
 }
 
 .admin-stats i {
@@ -1050,7 +1108,15 @@ td small {
     border: 1px solid #455277;
     border-radius: 50%;
     display: grid;
-    place-items: center
+    place-items: center;
+    transition: .2s
+}
+
+.socials a:hover {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+    transform: translateY(-2px)
 }
 
 .copyright {
@@ -1059,6 +1125,64 @@ td small {
     padding: 18px;
     font-size: 12px;
     color: #91a0c0
+}
+
+/* Newsletter CTA band */
+.newsletter {
+    margin-top: 80px;
+    background: linear-gradient(135deg, var(--navy), #213566);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 48px 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow)
+}
+
+.newsletter h2 {
+    font: 700 28px var(--font-display);
+    margin: 0 0 6px
+}
+
+.newsletter p {
+    color: #cbd6ee;
+    margin: 0;
+    max-width: 420px
+}
+
+.newsletter form {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+    max-width: 420px
+}
+
+.newsletter input {
+    flex: 1;
+    border: 0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    outline: 0;
+    font-size: 14px
+}
+
+.newsletter button {
+    border: 0;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-weight: 700;
+    font-size: 13px;
+    background: linear-gradient(135deg, var(--red), #ff6a3d);
+    color: #fff;
+    cursor: pointer;
+    transition: .2s
+}
+
+.newsletter button:hover {
+    transform: translateY(-2px)
 }
 
 [data-theme=dark] {
@@ -1268,5 +1392,13 @@ td small {
 
     .article-body p {
         font-size: 16px
+    }
+
+    .newsletter {
+        padding: 32px 24px
+    }
+
+    .newsletter form {
+        max-width: 100%
     }
 }

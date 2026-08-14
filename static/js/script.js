@@ -15,3 +15,28 @@ const observer = new IntersectionObserver(entries => entries.forEach(entry => { 
 document.querySelectorAll('.reveal').forEach(element => observer.observe(element));
 
 document.querySelectorAll('form').forEach(form => form.addEventListener('submit', () => { const button = form.querySelector('button[type="submit"],button:not([type])'); if (button && !button.classList.contains('icon-button')) { button.classList.add('loading'); button.setAttribute('aria-busy', 'true'); } }));
+
+// Scroll progress bar
+const progress = document.querySelector('#scrollProgress');
+if (progress) {
+    const updateProgress = () => {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        progress.style.width = height > 0 ? (scrollTop / height) * 100 + '%' : '0%';
+    };
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+}
+
+// Newsletter form feedback (front-end only)
+const newsletterForm = document.querySelector('.newsletter form');
+newsletterForm?.addEventListener('submit', () => {
+    const input = newsletterForm.querySelector('input');
+    if (input && input.checkValidity()) {
+        const button = newsletterForm.querySelector('button');
+        const original = button.innerHTML;
+        button.innerHTML = '<i class="fa-solid fa-check"></i> Subscribed';
+        input.value = '';
+        setTimeout(() => { button.innerHTML = original; }, 2500);
+    }
+});
